@@ -1,170 +1,266 @@
-// Budget Controller
-var budgetcontroller=(function(){
-	var Expense=function(id,description,value){//Function Constructor
-		this.id=id;
-		this.description=description;
-		this.value=value;
-	};
-
-	var Income=function(id,description,value){ //Function Constructor
-		this.id=id;
-		this.description=description;
-		this.value=value;
-	};
-
-	var data= {
-		allItems :{
-			exp:[],
-			inc:[]
+// BUDGET CONTROLLER
+var budgetController = (function() {
+    
+    var Expense = function(id, description, value) {  //Function constructor for expense
+        this.id = id;
+        this.description = description;
+        this.value = value;
+        
+    };
+    
+    var Income = function(id, description, value) {   //Function constructor of expense
+        this.id = id;
+        this.description = description;
+        this.value = value;
+    };
+    
+    var calculateTotal = function(type) {
+        var sum = 0;
+        data.allItems[type].forEach(function(cur) {
+            sum += cur.value;
+        });
+        data.totals[type] = sum;
+    };
+    
+    
+    var data = {
+        allItems: {
+            exp: [],
+            inc: []
+        },
+        totals: {
+            exp: 0,
+            inc: 0
+        },
+        budget: 0,
+        percentage: -1
+    };
+    
+    
+    return {
+        addItem: function(type, des, val) {
+            
+            
+            // Create new ID
+            if (data.allItems[type].length > 0) {
+                ID = data.allItems[type][data.allItems[type].length - 1].id + 1;
+            } else {
+                ID = 0;
+            }
+            
+            // Create new item based on 'inc' or 'exp' type
+            if (type === 'exp') {
+                newItem = new Expense(ID, des, val);
+            } else if (type === 'inc') {
+                newItem = new Income(ID, des, val);
+            }
+            
+            // Push it into our data structure
+            data.allItems[type].push(newItem);
+            
+            // Return the new element
+            return newItem;
+        },
+        
+       calculateBudget: function() {
+            
+            // calculate total income and expenses
+            calculateTotal('exp');
+            calculateTotal('inc');
+            
+            // Calculate the budget: income - expenses
+            data.budget = data.totals.inc - data.totals.exp;
+            
+            // calculate the percentage of income that we spent
+            if (data.totals.inc > 0) {
+                data.percentage = Math.round((data.totals.exp / data.totals.inc) * 100);
+            } else {
+                data.percentage = -1;
+            }            
+            
+            // Expense = 100 and income 300, spent 33.333% = 100/300 = 0.3333 * 100
 		},
-		totals:{
-			exp:0,
-			inc:0
-		}
-	};
-
-	return {
-		addItem: function(type,des,val){
-			var newItem,ID;
-			if(data.allItems[type].length>0){
-				ID=data.allItems[type][data.allItems[type].length-1].id+1;//create new id
-
-			} else{
-				ID=0;
-			}
-			
-			if(type==='exp'){
-			 newItem = new Expense(ID,des,val); //creating object using fun constructor based on 'inc' or 'exp'
-			} else if(type==='inc'){
-				newItem= new Income(ID,des,val);
-			}
-			data.allItems[type].push(newItem);  //pushing inc or exp in the respective array
-			return newItem;//return new element
-
-		},
-
-		
-
-	};
-
-
-
-
-	}
-	)();
-
-
-//UI Controller
-var UIController=( function(){
-	var DOMstrings={
-		inputType: '.add__type',
-		inputDescription:'.add__description',
-		inputValue: '.add__value',
-		inputBtn: '.add__btn',
-		incomeContainer: '.income__list',
-		expensesContainer: '.expenses__list'
-
-	};
-
-	return {//returns object
-		getInput: function(){//object
-			return {
-				type: document.querySelector(DOMstrings.inputType).value,//properties of object
-				description: document.querySelector(DOMstrings.inputDescription).value,
-				value: document.querySelector(DOMstrings.inputValue).value
-			};
-		},
-		
-		addListItem: function(obj,type){
-			var html,newhtml,element;
-
-			//create html string with placeholder text
-			if(type==='inc')
-			{
-				element = DOMstrings.incomeContainer;
-				html = '<div class="item clearfix" id="income-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
-
-			}
-			else if(type==='exp')
-			{
-				element = DOMstrings.expensesContainer;
-				html =  '<div class="item clearfix" id="expense-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
-
-			}
-	
-		   //Replace the placeholder text with actual data
-		   newhtml=html.replace('%id%',obj.id);
-		   newhtml=newhtml.replace('%description%',obj.description);
-		   newhtml=newhtml.replace('%value%',obj.value);
-
-
-			//insert the HTML into the DOM
-			document.querySelector(element).insertAdjacentHTML('beforeend',newhtml);
-
-
-
-		},
-		clearFields: function(){
-			var fields,fieldsArr;
-			fields = document.querySelectorAll(DOMstrings.inputDescription + ',' + DOMstrings.inputValue); //It is a list
-			fieldsArr= Array.prototype.slice.call(fields);//converting list into array
-			fieldsArr.forEach(function(current,index,array)
-			{
-				current.value="";
-			});
-			fieldsArr[0].focus(); //bringing back focus to description
-			
-
-		},
-		getDOMstrings: function(){     // returning one more Object
-			return DOMstrings;
-		}
-
-	};
-
-
-
-
+		getBudget: function() {
+            return {
+                budget: data.budget,
+                totalInc: data.totals.inc,
+                totalExp: data.totals.exp,
+                percentage: data.percentage
+            };
+        },
+        testing: function() {
+            console.log(data);
+        }
+    };
+    
 })();
 
-//Global App Controller
-var controller=(function(budgetCtrl,UICtrl){
-	var setupEventListeners= function(){  //Putting all event listener in one place
-	var DOM=UICtrl.getDOMstrings();        
-	document.querySelector(DOM.inputBtn).addEventListener('click',ctrlAddItem);//Button clicked
-	document.addEventListener('keypress',function(event){ //Enter pressed
-		if(event.keyCode===13||event.which===13){
-			ctrlAddItem();
-		}
-	});
-
-
-	};
 
 
 
+// UI CONTROLLER
+var UIController = (function() {
+    
+    var DOMstrings = {
+        inputType: '.add__type',
+        inputDescription: '.add__description',
+        inputValue: '.add__value',
+        inputBtn: '.add__btn',
+        incomeContainer: '.income__list',
+        expensesContainer: '.expenses__list',
+        budgetLabel: '.budget__value',
+        incomeLabel: '.budget__income--value',
+        expensesLabel: '.budget__expenses--value',
+        percentageLabel: '.budget__expenses--percentage',
+        
+    };
+    
+     return {
+        getInput: function() {
+            return {
+                type: document.querySelector(DOMstrings.inputType).value, // Will be either inc or exp
+                description: document.querySelector(DOMstrings.inputDescription).value,
+                value: parseFloat(document.querySelector(DOMstrings.inputValue).value)
+            };
+        },
+        
+        
+        addListItem: function(obj, type) {
+            var html, newHtml, element;
+            // Create HTML string with placeholder text
+            
+            if (type === 'inc') {
+                element = DOMstrings.incomeContainer;
+                
+                html = '<div class="item clearfix" id="inc-%id%"> <div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+            } else if (type === 'exp') {
+                element = DOMstrings.expensesContainer;
+                
+                html = '<div class="item clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+            }
+            
+            //Replace the placeholder text with actual data
+		   newHtml=html.replace('%id%',obj.id);
+		   newHtml=newHtml.replace('%description%',obj.description);
+		   newHtml=newHtml.replace('%value%',obj.value);
+
+            // Insert the HTML into the DOM
+            document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
+        },
+        
+        
+      
+        
+        
+        clearFields: function() {   //To clear the input description and value after pressing enter
+            var fields, fieldsArr;
+            
+            fields = document.querySelectorAll(DOMstrings.inputDescription + ', ' + DOMstrings.inputValue);
+            
+            fieldsArr = Array.prototype.slice.call(fields);   //Converting list to array so that we can use forEach Loop
+            
+            fieldsArr.forEach(function(current, index, array) {
+                current.value = "";
+            });
+            
+            fieldsArr[0].focus();         //Bring focus back to description after pressing enter
+        },
+        
+        
+        displayBudget: function(obj) {
+          document.querySelector(DOMstrings.budgetLabel).textContent = obj.budget;  //Updating budget in UI
+		  document.querySelector(DOMstrings.incomeLabel).textContent = obj.totalInc;  
+		  document.querySelector(DOMstrings.expensesLabel).textContent = obj.totalExp;
+            if (obj.percentage > 0) {
+                document.querySelector(DOMstrings.percentageLabel).textContent = obj.percentage + '%';
+            } else {
+                document.querySelector(DOMstrings.percentageLabel).textContent = '---';
+            }
+            
+        },
+        getDOMstrings: function() {
+            return DOMstrings;
+        }
+    };
+    
+})();
+
+
+
+
+// GLOBAL APP CONTROLLER
+var controller = (function(budgetCtrl, UICtrl) {
+    
+	var setupEventListeners= function() {  //Putting all event listener in one place
+		var DOM=UICtrl.getDOMstrings();        
+		document.querySelector(DOM.inputBtn).addEventListener('click',ctrlAddItem);//Button clicked
+		document.addEventListener('keypress',function(event){ //Enter pressed
+			if(event.keyCode===13||event.which===13){
+				ctrlAddItem();
+			}
+		});
 	
-	var ctrlAddItem=function(){  //Adding new item
-		var input,newItem;
-		 input=UICtrl.getInput();//get the input
-		newItem=budgetCtrl.addItem(input.type,input.description,input.value);//add the item from budget controller
-		UICtrl.addListItem(newItem,input.type);      //add item to UI
-		UICtrl.clearFields();  //clearing fields
-
-	}
-
-	return {
-		init: function(){
-			console.log('App has started');
-			setupEventListeners();
-		}
-	};
-
 	
+		};
+	
+    
+    
+    var updateBudget = function() {
+        
+        // 1. Calculate the budget
+        budgetCtrl.calculateBudget();
+        
+        // 2. Return the budget
+        var budget = budgetCtrl.getBudget();
+        
+        // 3. Display the budget on the UI
+        UICtrl.displayBudget(budget);
+    };
+    
+    
+  
+    
+    var ctrlAddItem = function() {
+        var input, newItem;
+        
+        // 1. Get the field input data
+        input = UICtrl.getInput();        
+        
+        if (input.description !== "" && !isNaN(input.value) && input.value > 0) {
+            // 2. Add the item to the budget controller
+            newItem = budgetCtrl.addItem(input.type, input.description, input.value);
+
+            // 3. Add the item to the UI
+            UICtrl.addListItem(newItem, input.type);
+
+            // 4. Clear the fields
+            UICtrl.clearFields();
+
+            // 5. Calculate and update budget
+            updateBudget();
+            
+                    }
+    };
+    
+    
+  
+    
+    
+    return {
+        init: function() {     //Initializing function
+            console.log('Application has started.');
+        
+            UICtrl.displayBudget({   
+                budget: 0,
+                totalInc: 0,
+                totalExp: 0,
+                percentage: -1
+            });
+            setupEventListeners();
+        }
+    };
+    
+})(budgetController, UIController);
 
 
-
- 
-
-})(budgetcontroller,UIController);
-controller.init();
+controller.init();  //calling initialising function
