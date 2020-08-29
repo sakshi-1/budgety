@@ -60,7 +60,22 @@ var budgetController = (function() {
             
             // Return the new element
             return newItem;
-        },
+		},
+		
+		deleteItem: function(type,id){
+			var ids, index;
+			ids = data.allItems[type].map(function(current){
+				return current.id;
+			});
+			index = ids.indexOf(id);
+
+			if(index !== -1) {
+				data.allItems[type].splice(index,1);
+			}
+
+
+
+		},
         
        calculateBudget: function() {
             
@@ -111,7 +126,8 @@ var UIController = (function() {
         budgetLabel: '.budget__value',
         incomeLabel: '.budget__income--value',
         expensesLabel: '.budget__expenses--value',
-        percentageLabel: '.budget__expenses--percentage',
+		percentageLabel: '.budget__expenses--percentage',
+		container: '.container'
         
     };
     
@@ -146,7 +162,12 @@ var UIController = (function() {
 
             // Insert the HTML into the DOM
             document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
-        },
+		},
+		
+		deleteListItem: function(selectorID){
+		  var el= document.getElementById(selectorID);
+		  el.parentNode.removeChild(el);
+		},
         
         
       
@@ -199,6 +220,7 @@ var controller = (function(budgetCtrl, UICtrl) {
 				ctrlAddItem();
 			}
 		});
+		document.querySelector(DOM.container).addEventListener('click',ctrlDeleteItem);
 	
 	
 		};
@@ -240,7 +262,28 @@ var controller = (function(budgetCtrl, UICtrl) {
             updateBudget();
             
                     }
-    };
+	};
+	
+	var ctrlDeleteItem = function(event){
+		var itemID, splitID, type, ID;
+		itemID=event.target.parentNode.parentNode.parentNode.parentNode.id;
+		 if(itemID) {
+			 splitID = itemID.split('-');   //split itemid  string in two parts
+			 type= splitID[0];         //first part is type (string)
+			 ID = parseInt(splitID[1]);          //second is id (string converted to int)
+
+			 //1 Delete item from data structure
+              budgetCtrl.deleteItem(type,ID);
+
+			 //2 Delete the item from UI
+			 UICtrl.deleteListItem(itemID);
+
+
+			 //3 Update and show the new budget
+			 updateBudget();
+		 }
+
+	};
     
     
   
